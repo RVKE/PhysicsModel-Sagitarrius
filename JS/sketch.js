@@ -9,6 +9,9 @@ let physicsEnabled = true;
 let velocityLinesEnabled = false;
 let vectorLinesEnabled = false;
 let backgroundImage;
+let selectToLockMode = false;
+let lockedToBody = false;
+let lockedBody;
 const gravitationalConstant = 6.674*(10**-11);
 
 function start() {
@@ -16,13 +19,14 @@ function start() {
   createCanvas(windowWidth, windowHeight);
   noStroke();
 
-  placeButton("PLACE STELLAR BODY", 10, 60, 20, openMenu);
+  placeButton("PLACE STELLAR BODY", 10, 100, 20, openMenu);
+  placeButton("LOCK TO STELLAR BODY", 10, 60, 20, toLockMode);
   placeButton("+", 10, 10, 10, function() { changeScale(0.5);});
   placeButton("-", 35, 10, 10, function() { changeScale(2);});
   placeButton("Toggle Physics", 65, 10, 10, togglePhysics);
   placeButton("Remove Bodies", 160, 10, 10, removeBodies);
-  placeButton("Toggle velocity lines", 10, 35, 10, toggleVelocityLines);
-  placeButton("Toggle vector lines", 150, 35, 10, toggleVectorLines);
+  placeButton("Toggle Velocity Rays", 10, 35, 10, toggleVelocityLines);
+  placeButton("Toggle Distance Rays", 130, 35, 10, toggleVectorLines);
 
   for (i = 0; i < bodies.length; i++) {
     bodies[i].pos.add(p5.Vector.sub(createVector(mouseX, mouseY), createVector(windowWidth/2, windowHeight/2)));
@@ -54,17 +58,28 @@ function placeButton(text, x, y, size, action) {
   button.mousePressed(action);
 }
 
+function toLockMode() {
+  if (placeMode == false && slingshotMode == false) {
+    selectToLockMode = !selectToLockMode;
+  }
+}
+
+function leaveLockMode() {
+  lockedToBody = false;
+  lockedBody = null;
+}
+
 function openMenu() {
-  placeButton("SAGITTARIUS A *", 10, 100, 15, function() { setBody("Sagittarius a *");});
-  placeButton("THE SUN", 10, 130, 15, function() { setBody("The Sun");});
-  placeButton("EARTH", 10, 160, 15, function() { setBody("Earth");});
-  placeButton("MOON", 10, 190, 15, function() { setBody("Moon");});
-  placeButton("MERCURY", 10, 220, 15, function() { setBody("Mercury");});
-  placeButton("JUPITER", 10, 250, 15, function() { setBody("Jupiter");});
-  placeButton("URANUS", 10, 280, 15, function() { setBody("Uranus");});
-  placeButton("TON 618", 10, 310, 15, function() { setBody("TON 618");});
-  placeButton("VY CANIS MAJORIS", 10, 340, 15, function() { setBody("VY Canis Majoris");});
-  placeButton("PROXIMA CENTAURI", 10, 370, 15, function() { setBody("Proxima Centauri");});
+  placeButton("EARTH", 10, 140, 15, function() { setBody("Earth");});
+  placeButton("MOON", 10, 170, 15, function() { setBody("Moon");});
+  placeButton("MERCURY", 10, 200, 15, function() { setBody("Mercury");});
+  placeButton("JUPITER", 10, 230, 15, function() { setBody("Jupiter");});
+  placeButton("URANUS", 10, 260, 15, function() { setBody("Uranus");});
+  placeButton("THE SUN", 10, 290, 15, function() { setBody("The Sun");});
+  placeButton("VY CANIS MAJORIS", 10, 320, 15, function() { setBody("VY Canis Majoris");});
+  placeButton("PROXIMA CENTAURI", 10, 350, 15, function() { setBody("Proxima Centauri");});
+  placeButton("SAGITTARIUS A *", 10, 380, 15, function() { setBody("Sagittarius a *");});
+  placeButton("TON 618", 10, 410, 15, function() { setBody("TON 618");});
 }
 
 function togglePhysics() {
@@ -102,6 +117,7 @@ function changeScale(scaleMultiplier) {
 }
 
 function setBody(currentBodyName) {
+  selectToLockMode = false;
   placeMode = !placeMode;
   currentBody = currentBodyName;
   playSound("SOUND/select.mp3");
@@ -115,19 +131,33 @@ function placeBody(name, x, y, vx, vy, m, d, c) {
 
 function mouseClicked() {
   if (slingshotMode == false) {
-    if (mouseX > 250 || mouseY > 400) {
+    if (mouseX > 250 || mouseY > 440) {
       if (placeMode == true) {
         slingshotPos = createVector(mouseX, mouseY);
         slingshotMode = true;
       } else {
-        for (i = 0; i < bodies.length; i++) {
-          bodies[i].pos.add(p5.Vector.sub(createVector(windowWidth/2, windowHeight/2), createVector(mouseX, mouseY)));
+        if (selectToLockMode == true) {
+          for (let l = 0; l < bodies.length; l++) {
+            if (p5.Vector.dist(createVector(mouseX, mouseY), bodies[l].pos) < bodies[l].diameter/pixelKmRatio/2) {
+              selectToLockMode = false;
+              lockedToBody = true;
+              lockedBody = bodies[l];
+            }
+          }
+        } else {
+          if (lockedToBody == true) {
+            if (p5.Vector.dist(createVector(mouseX, mouseY), lockedBody.pos) < lockedBody.diameter/pixelKmRatio/2) {
+              leaveLockMode();
+            }
+          }
         }
       }
     }
   } else {
-
     let speedVector = p5.Vector.mult(p5.Vector.div(p5.Vector.sub(slingshotPos, createVector(mouseX, mouseY)), 60), pixelKmRatio/1000);
+    if (lockedBody != null) {
+      speedVector.add(lockedBody.vel);
+    }
     playSound("SOUND/place.mp3");
     if (currentBody == "Sagittarius a *") {
       placeBody(currentBody, slingshotPos.x, slingshotPos.y, speedVector.x, speedVector.y, 8.550*(10**36), 22000000, color('#000000'));
@@ -178,21 +208,35 @@ function draw() {
   }
 
   for (i = 0; i < bodies.length; i++) {
-    if (keyIsDown(65)) {
-      bodies[i].pos.add(createVector(10, 0));
-    }
-    if (keyIsDown(68)) {
-      bodies[i].pos.add(createVector(-10, 0));
-    }
-    if (keyIsDown(87)) {
-      bodies[i].pos.add(createVector(0, 10));
-    }
-    if (keyIsDown(83)) {
-      bodies[i].pos.add(createVector(0, -10));
-    }
     bodies[i].display();
     if (physicsEnabled == true) {
       bodies[i].calculatePos();
+    }
+
+    if (lockedToBody == true) {
+      bodies[i].pos.add(p5.Vector.sub(createVector(windowWidth/2, windowHeight/2), lockedBody.pos));
+      fill(50);
+      rect(270, 100, 220, 50);
+      fill(255, 255, 255, 0);
+      stroke(255, 100, 100);
+      rect(lockedBody.pos.x-lockedBody.diameter/pixelKmRatio/2, lockedBody.pos.y-lockedBody.diameter/pixelKmRatio/2, (lockedBody.diameter/pixelKmRatio), lockedBody.diameter/pixelKmRatio);
+      fill(255);
+      noStroke();
+      text("Currently locked to " + lockedBody.name, 280, 120);
+      text("To leave lockmode, click on the body.", 280, 140);
+    } else {
+      if (keyIsDown(65)) {
+        bodies[i].pos.add(createVector(10, 0));
+      }
+      if (keyIsDown(68)) {
+        bodies[i].pos.add(createVector(-10, 0));
+      }
+      if (keyIsDown(87)) {
+        bodies[i].pos.add(createVector(0, 10));
+      }
+      if (keyIsDown(83)) {
+        bodies[i].pos.add(createVector(0, -10));
+      }
     }
   }
 
@@ -203,6 +247,15 @@ function draw() {
     noStroke();
     fill(255);
     text("Placing: " + currentBody, mouseX+10, mouseY-10);
+  }
+
+  if (selectToLockMode == true) {
+    stroke(255, 0, 255, 170);
+    line(mouseX, 0, mouseX, windowHeight);
+    line(0, mouseY, windowWidth, mouseY);
+    noStroke();
+    fill(255);
+    text("Click on a body to lock", mouseX+10, mouseY-10);
   }
 
   stroke(0, 255, 0, 170);
@@ -222,7 +275,8 @@ function draw() {
   text(bodies.length + " bodies", 280, 50);
   text("physicsEnabled = " + physicsEnabled, 280, 70);
   text("1 Pixel = " + round(pixelKmRatio * 100)/100 + "km", 280, 90);
-  text("THIS IS A WORK IN PROGRESS! There are still a lot of bugs and timescales are far from representative.", 950, 30);
+  text("THIS IS A WORK IN PROGRESS! There are still plenty of bugs and timescales are far from representative.", 950, 30);
+  text("USE [WASD] TO MOVE AROUND", 20, windowHeight-50);
   stroke(255, 255, 255, 255);
   line((windowWidth/2)-5, windowHeight/2, (windowWidth/2)+5, windowHeight/2);
   line(windowWidth/2, (windowHeight/2)-5, windowWidth/2, (windowHeight/2)+5);
@@ -233,7 +287,6 @@ function draw() {
 function windowResized() {
    resizeCanvas(windowWidth, windowHeight);
    background(0);
-   image(backgroundImage, 0, 0);
 }
 
 class Body {
@@ -294,13 +347,14 @@ class Body {
               let newMass = this.mass + bodies[t].mass;
               let newDiameter = 2*sqrt(((PI * sq(this.diameter/2)) + (PI * sq(bodies[t].diameter/2)))/PI);
               let newColor = this.color;
-
               bodies.splice(t, t+1);
               bodies.splice(bodies.indexOf(this), bodies.indexOf(this)+1);
 
               playSound("SOUND/collide.mp3");
 
               placeBody(newName, newPos.x, newPos.y, combinedVel.x, combinedVel.y, newMass, newDiameter, newColor);
+              lockedBody = null;
+              lockedToBody = false;
             }
           }
         }
