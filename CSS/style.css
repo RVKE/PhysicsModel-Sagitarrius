@@ -4,21 +4,3 @@ body {
   overflow: hidden;
   background-color: black;
 }
-
-#startButton {
-  position: fixed;
-  width: 150px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  background-color:transparent;
-	border: 3px solid white;
-	display: inline-block;
-  height: 10%;
-  width: 20%;
-	cursor: pointer;
-	color: white;
-	font-family: Verdana;
-  font-size: 20px;
-}

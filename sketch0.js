@@ -1,6 +1,5 @@
 let scaleFactor = 400000; //1 pixel op het beeldscherm is standaard gelijk aan dit aantal in de simulatie
 let bodies = [];
-let traceObjects = [];
 const gravitationalConstant = 6.674*(10**-11); //gravitatieconstante
 let deltaTime = 10; //tijdstappen
 let backgroundImage;
@@ -11,37 +10,23 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   noStroke();
   setBackgroundImage();
-  strokeWeight(4);
 
   createBody("Sagittarius A*", 0, 0, 0, 0, 8.550*(10**36), 44000000); //roep functie aan die Sagittarius A* body aanmaakt.
 
-  input = createInput("beginsnelheid y (km/s)");
-  input.position(0, 90)
-  input.style('font-size', '17px');
-  input.center("horizontal");
-
-  placeButton("PLAATS AARDE", 0, 30, 30, true, function() { if(bodies.length < 6) { createBody("Earth", -150000000, 0, 0, int(input.value()), 5.972*(10**24), 12742);}});
-  placeButton("RESET SIMULATIE", windowWidth-160, 20, 15, false, function() { location.reload();});
+  //input = createInput("beginsnelheid y (km/h)");
+  //input.position(0, 90)
+  //input.style('font-size', '17px');
+  //input.center("horizontal");
+  //button = createButton('PLAATS AARDE');
+  //button.position(0, 30);
+  //button.style('font-size', '27px');
+  //button.center("horizontal");
+  //button.mousePressed(function() { createBody("Earth", -150000000, 0, 0, int(input.value()), 5.972*(10**24), 12742);});
 }
 
 function createBody(n, x, y, vx, vy, m, d) {
   newBody = new Body(n, x, y, vx, vy, m, d);
   bodies.push(newBody);
-}
-
-function placeButton(text, x, y, size, centered, action) {
-  button = createButton(text);
-  button.position(x, y);
-  button.style('font-size', size + "px");
-  button.style('color', 'white');
-  button.style('background-color', 'transparent');
-  button.style('border-style', 'solid');
-  button.style('border-color', 'white');
-  button.style('outline', 'none');
-  button.mousePressed(action);
-  if (centered) {
-    button.center("horizontal");
-  }
 }
 
 function setBackgroundImage() {
@@ -58,15 +43,18 @@ function setBackgroundImage() {
 }
 
 function drawInterface() {
-
+  fill(40, 40, 40, 150);
+  rect(0, 0, 100, windowHeight);
+  fill(148, 56, 181, 150);
+  rect(100, 0, 5, windowHeight);
+  fill(40, 40, 40, 150);
+  rect(windowWidth/2-150, 0, 300, 75);
   fill(255);
-  text("deltaTime = " + deltaTime + " (wijzig met pijltjestoetsen ↑↓)", windowWidth/2, 150);
+  text("deltaTime = " + deltaTime, windowWidth/2, 140);
+  text("wijzig met pijltjestoetsen ↑↓", windowWidth/2, 160);
 
   for (let b = 0; b < bodies.length; b++) {
     fill(255);
-    if (bodies[b] == selectedBody) {
-      stroke(255, 0, 0, 180);
-    }
     if (p5.Vector.dist(createVector(mouseX, mouseY), createVector(50, 50 + b * 90)) <= 35) {
       ellipse(50, 50 + b * 90, 75);
       textSize(26-bodies[b].name.length);
@@ -93,8 +81,8 @@ function drawInterface() {
     text("Mass: " + selectedBody.mass + "kg", windowWidth-220, windowHeight/2-120);
     text("Diameter: " + selectedBody.diameter + "km", windowWidth-220, windowHeight/2-80);
     text("Pos: (" + round(selectedBody.pos.x) + ", " + round(selectedBody.pos.y) + ") km", windowWidth-220, windowHeight/2-40);
-    text("Vel: (" + round(selectedBody.vel.x) + ", " + round(selectedBody.vel.y) + ") km/s", windowWidth-220, windowHeight/2);
-    text("Acc: (" + round(selectedBody.acc.x) + ", " + round(selectedBody.acc.y) + ") km/s^2", windowWidth-220, windowHeight/2+40);
+    text("Vel: (" + round(selectedBody.vel.x) + ", " + round(selectedBody.vel.y) + ") km/h", windowWidth-220, windowHeight/2);
+    text("Acc: (" + round(selectedBody.acc.x) + ", " + round(selectedBody.acc.y) + ") m/s^2", windowWidth-220, windowHeight/2+40);
     text("Force: (" + round(selectedBody.force.x/10**27)*10**27 + ", " + round(selectedBody.force.y/10**27)*10**27 + ") N", windowWidth-220, windowHeight/2+80);
 
     rect(windowWidth-175, windowHeight/2+100, 100, 100);
@@ -130,14 +118,8 @@ function draw() {
   drawInterface();
   translate(windowWidth/2, windowHeight/2);
 
-  for (let t = 0; t < traceObjects.length; t++) {
-    traceObjects[t].display();
-  }
-
   for (let i = 0; i < bodies.length; i++) {
     bodies[i].calculatePos();
     bodies[i].display();
-    newTrace = new TraceObject(bodies[i].pos.x/scaleFactor, bodies[i].pos.y/scaleFactor);
-    traceObjects.push(newTrace);
   }
 }
