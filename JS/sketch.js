@@ -22,6 +22,7 @@ function setup() {
 
   placeButton("PLAATS AARDE", 0, 30, 30, true, function() { if(bodies.length < 6) { createBody("Earth", -150000000, 0, 0, int(input.value()), 5.972*(10**24), 12742);}});
   placeButton("RESET SIMULATIE", windowWidth-160, 20, 15, false, function() { location.reload();});
+  placeButton("RESET LIJNEN", windowWidth-300, 20, 15, false, function() { for (let p = 0; p < traceObjects.length; p++) { traceObjects.splice(p);}});
 }
 
 function createBody(n, x, y, vx, vy, m, d) {
@@ -61,7 +62,7 @@ function drawInterface() {
 
   fill(255);
   text("deltaTime = " + deltaTime + " (wijzig met pijltjestoetsen ↑↓)", windowWidth/2, 150);
-  text("1 pixel = " + scaleFactor + "km ", windowWidth/2, 180);
+  text("1 pixel = " + scaleFactor + "km (verander met [E] en [Q])", windowWidth/2, 180);
 
   for (let b = 0; b < bodies.length; b++) {
     fill(255);
@@ -120,6 +121,17 @@ function keyPressed() {
     deltaTime *= 2;
   } else if (keyCode === DOWN_ARROW) {
     deltaTime /= 2;
+  }
+  if (keyCode == "69") {
+    scaleFactor /= 2;
+    for (let r = 0; r < traceObjects.length; r++) {
+      traceObjects[r].pos.mult(2);
+    }
+  } else if (keyCode == "81") {
+    scaleFactor *= 2;
+    for (let r = 0; r < traceObjects.length; r++) {
+      traceObjects[r].pos.div(2);
+    }
   }
 }
 
