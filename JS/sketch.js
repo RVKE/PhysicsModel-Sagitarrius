@@ -61,6 +61,7 @@ function drawInterface() {
 
   fill(255);
   text("deltaTime = " + deltaTime + " (wijzig met pijltjestoetsen ↑↓)", windowWidth/2, 150);
+  text("1 pixel = " + scaleFactor + "km ", windowWidth/2, 180);
 
   for (let b = 0; b < bodies.length; b++) {
     fill(255);
@@ -81,6 +82,12 @@ function drawInterface() {
     fill(255);
     textSize(10);
     text(b, 15, 15 + b * 90);
+    fill(255);
+    textSize(15);
+    if (bodies[b].name == "Earth") {
+      text("startsnelheid: " + bodies[b].startVelY, 180, 40 + b * 90);
+      text("max afwijking: " + round(bodies[b].maxOrbitRadiusDifference/scaleFactor/1000*100)/100 + "px", 180, 60 + b * 90);
+    }
   }
 
   if (selectedBody != null) {

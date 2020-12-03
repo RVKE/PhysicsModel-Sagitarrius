@@ -8,6 +8,10 @@ class Body {
     this.forces = [];
     this.mass = m; //massa van object in kg
     this.diameter = d; //diameter van object in km
+
+    this.startVelY = vy;
+    this.orbitRadiusList = [];
+    this.maxOrbitRadiusDifference = 0;
   }
 
   calculatePos() {
@@ -30,6 +34,12 @@ class Body {
           let unitDir = createVector(-dirVector.x/sqrt(sq(dirVector.x)+sq(dirVector.y)), -dirVector.y/sqrt(sq(dirVector.x)+sq(dirVector.y))); //bereken de eenheidsrichting
           let newForce = p5.Vector.mult(unitDir, gravitationalForce); //vermenigvuldig de gravitiekracht met de eenheidsrichting om de krachtenvector te krijgen
           this.forces[t] = newForce; //zet de nieuwe kracht in de lijst met alle krachten die op de 'body' werken
+
+          if (bodies[t].name == "Sagittarius A*") {
+            this.orbitRadiusList.push(distance);
+            this.maxOrbitRadiusDifference = round(max(this.orbitRadiusList) - min(this.orbitRadiusList));
+          }
+
           if (p5.Vector.dist(this.pos, bodies[t].pos) < (this.diameter/2)+(bodies[t].diameter/2) && this.mass > bodies[t].mass) {
             bodies.splice(t, t);
           }
